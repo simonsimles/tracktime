@@ -1,0 +1,9 @@
+*.class
+.idea
+target/
+.bloop/
+.bsp/
+.metals/
+data/
+null/
+PowerShell\ 7.2.6/
