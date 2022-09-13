@@ -7,3 +7,9 @@ target/
 data/
 null/
 PowerShell\ 7.2.6/
+ui/node_modules
+ui/coverage
+ui/build
+ui/.DS_Store
+ui/.env
+ui/nom-debug.log
