@@ -20,7 +20,7 @@ object ProjectRegistry extends AbstractRegistry {
       project: Project,
       replyTo: ActorRef[Project]
   ) extends ProjectCommand
-  final case class DeleteProject(projectId: String, replyTo: ActorRef[Project])
+  final case class DeleteProject(projectId: String, replyTo: ActorRef[Option[Project]])
       extends ProjectCommand
 
   import de.simles.tracktime.JsonFormats._
@@ -37,9 +37,12 @@ object ProjectRegistry extends AbstractRegistry {
           .getOrElse(Seq.empty)
           .filterNot(_.projectId == project.projectId) :+ project
       )
+      replyTo ! project
       Behaviors.same
     case DeleteProject(projectId, replyTo) =>
-      writeFile(readFile[Seq[Project]]().getOrElse(Seq.empty).filterNot(_.projectId == projectId))
+      val projects = readFile[Seq[Project]]().getOrElse(Seq.empty)
+      writeFile(projects.filterNot(_.projectId == projectId))
+      replyTo ! projects.filter(_.projectId == projectId).lift(0)
       Behaviors.same
   }
 

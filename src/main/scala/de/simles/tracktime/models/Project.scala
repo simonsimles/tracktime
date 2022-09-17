@@ -7,20 +7,23 @@ final case class Project(
     projectId: String,
     name: String,
     jobNumbers: Seq[JobNumber],
-    isActive: Boolean
+    isActive: Boolean,
+    isChargeable: Boolean
 ) {
   def addJobNumber(jobNumber: JobNumber): Project = Project(
     projectId,
     name,
     jobNumbers :+ jobNumber,
-    isActive
+    isActive,
+    isChargeable
   )
 
   def toggleActive: Project = Project(
     projectId,
     name,
     jobNumbers,
-    !isActive
+    !isActive,
+    isChargeable
   )
 }
 

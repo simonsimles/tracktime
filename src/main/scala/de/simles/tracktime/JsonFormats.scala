@@ -30,6 +30,15 @@ object JsonFormats extends DefaultJsonProtocol {
     }
   }
 
+  implicit object WeekFormat extends RootJsonFormat[Week] {
+    val re = raw"(\d{4})-W(\d{2})".r
+    def write(obj: Week): JsValue = JsString(f"${obj.year}%04d-W${obj.week}%02d")
+    def read(json: JsValue): Week = json match {
+      case JsString(re(year, week)) => Week(year.toInt, week.toInt)
+      case _                        => Week(9999, 9)
+    }
+  }
+
   implicit val intervalPeriodFormat = jsonFormat3(IntervalPeriod)
   implicit val absolutePeriodFormat = jsonFormat1(AbsolutePeriod)
 
@@ -50,7 +59,7 @@ object JsonFormats extends DefaultJsonProtocol {
 
   implicit val workFormat = jsonFormat5(Work)
   implicit val jobNumberFormat = jsonFormat3(JobNumber)
-  implicit val projectFormat = jsonFormat4(Project)
+  implicit val projectFormat = jsonFormat5(Project)
 
   implicit val workWeekFormat = jsonFormat3(WorkWeek)
 }

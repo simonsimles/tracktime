@@ -13,3 +13,5 @@ ui/build
 ui/.DS_Store
 ui/.env
 ui/nom-debug.log
+project/*
+

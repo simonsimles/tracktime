@@ -13,34 +13,34 @@ import java.time.temporal.WeekFields
 
 object WorkRegistry extends AbstractRegistry {
   sealed trait WorkCommand
-  final case class GetWorkWeek(weekDay: LocalDate, replyTo: ActorRef[Option[WorkWeek]])
+  final case class GetWorkWeek(week: Week, replyTo: ActorRef[Option[WorkWeek]])
       extends WorkCommand
   final case class GetWorkForWeek(
-      weekDay: LocalDate,
+      week: Week,
       replyTo: ActorRef[Seq[Work]]
   ) extends WorkCommand
   final case class AddOrUpdateWork(work: Work, replyTo: ActorRef[Work]) extends WorkCommand
   final case class DeleteWork(work: Work, replyTo: ActorRef[Work]) extends WorkCommand
   final case class AddWeekComment(
-      weekDay: LocalDate,
+      week: Week,
       comment: String,
       replyTo: ActorRef[WorkWeek]
   ) extends WorkCommand
 
   import de.simles.tracktime.JsonFormats._
   def apply(): Behavior[WorkCommand] = Behaviors.receiveMessage {
-    case GetWorkWeek(weekDay, replyTo) =>
-      replyTo ! readFile[WorkWeek](getFolderForWeek(weekDay))
+    case GetWorkWeek(week, replyTo) =>
+      replyTo ! readFile[WorkWeek](getFolderForWeek(week))
       Behaviors.same
-    case GetWorkForWeek(weekDay, replyTo) =>
-      replyTo ! readFile[WorkWeek](getFolderForWeek(weekDay)).map(_.work).getOrElse(Seq.empty)
+    case GetWorkForWeek(week, replyTo) =>
+      replyTo ! readFile[WorkWeek](getFolderForWeek(week)).map(_.work).getOrElse(Seq.empty)
       Behaviors.same
     case AddOrUpdateWork(work, replyTo) =>
       val workWeek = readFile[WorkWeek](getFolderForWeek(work.date))
-        .getOrElse(WorkWeek(WorkWeek.getWeekNumber(work.date), None, Seq.empty))
+        .getOrElse(WorkWeek(Week.fromDate(work.date), None, Seq.empty))
       val otherWork = workWeek.work.filterNot(_.id == work.id)
       val newWork = if (!workWeek.work.exists(_.id == work.id)) {
-        work.withId(otherWork.maxBy(_.id).id + 1)
+        work.withId((if (otherWork.isEmpty) 0 else otherWork.maxBy(_.id).id) + 1)
       } else { work }
       writeFile(
         workWeek.withWork(otherWork :+ newWork),
@@ -50,30 +50,32 @@ object WorkRegistry extends AbstractRegistry {
       Behaviors.same
     case DeleteWork(work, replyTo) =>
       val workWeek = readFile[WorkWeek](getFolderForWeek(work.date))
-        .getOrElse(WorkWeek(WorkWeek.getWeekNumber(work.date), None, Seq.empty))
+        .getOrElse(WorkWeek(Week.fromDate(work.date), None, Seq.empty))
       writeFile(
         workWeek.withWork(workWeek.work.filterNot(_.id == work.id)),
         getFolderForWeek(work.date)
       )
       replyTo ! work
       Behaviors.same
-    case AddWeekComment(weekDay, comment, replyTo) =>
+    case AddWeekComment(week, comment, replyTo) =>
       val newWorkWeek =
-        readFile[WorkWeek](getFolderForWeek(weekDay))
-          .getOrElse(WorkWeek(WorkWeek.getWeekNumber(weekDay), None, Seq.empty))
+        readFile[WorkWeek](getFolderForWeek(week))
+          .getOrElse(WorkWeek(week, None, Seq.empty))
           .withComment(comment)
       writeFile(
         newWorkWeek,
-        getFolderForWeek(weekDay)
+        getFolderForWeek(week)
       )
       replyTo ! newWorkWeek
       Behaviors.same
   }
 
-  def getFolderForWeek(date: LocalDate): String = {
+  def getFolderForWeek(date: LocalDate): String = getFolderForWeek(Week.fromDate(date))
+
+  def getFolderForWeek(weekForFolder: Week): String = {
     val directory = "work"
-    val year = f"${date.getYear()}%04d"
-    val week = f"${WorkWeek.getWeekNumber(date)}%02d"
+    val year = f"${weekForFolder.year}%04d"
+    val week = f"${weekForFolder.week}%02d"
     return Paths.get(directory, year, week).toString()
   }
 }

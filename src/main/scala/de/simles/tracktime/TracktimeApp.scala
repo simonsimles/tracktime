@@ -4,6 +4,7 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.Directives._
 
 import scala.util.Failure
 import scala.util.Success
@@ -13,7 +14,7 @@ import de.simles.tracktime.registry.WorkRegistry
 object TracktimeApp {
   private def startHttpServer(routes: Route)(implicit system: ActorSystem[_]): Unit = {
     import system.executionContext
-    val futureBinding = Http().newServerAt("localhost", 9000).bind(routes)
+    val futureBinding = Http().newServerAt("0.0.0.0", 9000).bind(routes)
     futureBinding.onComplete {
       case Success(binding) =>
         val address = binding.localAddress
@@ -32,7 +33,7 @@ object TracktimeApp {
       context.watch(workRegistryActor)
 
       val routes = new Routes(projectRegistryActor, workRegistryActor)(context.system)
-      startHttpServer(routes.apiRoutes)(context.system)
+      startHttpServer(routes.apiRoutes ~ routes.assets)(context.system)
 
       Behaviors.empty
     }
