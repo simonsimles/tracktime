@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button, Form, Offcanvas, Row } from 'react-bootstrap'
 import { BsStopwatch } from 'react-icons/bs'
 import { Api, AbsolutePeriod, getTimeFromString, IntervalPeriod, Project, Time, Work } from './Api'
-import {Week} from './WeekPicker'
+import { Week } from './WeekPicker'
 
 interface TimeFieldProps {
     time?: Time
@@ -182,7 +182,7 @@ export const NewWork = ({ updateWork, newId, week, projectMap }: NewWorkProps) =
             id: newId,
             project: "",
             date: week.getClosestToCurrentDate().toISOString().substring(0, 10),
-            period: new AbsolutePeriod()
+            period: new IntervalPeriod(new Time().now())
         })
         setIsVisible(true)
     }
@@ -193,9 +193,11 @@ export const NewWork = ({ updateWork, newId, week, projectMap }: NewWorkProps) =
     }
 
     const save = () => {
-        Api.addOrUpdateWork(work)
-        close()
-        updateWork()
+        Api.addOrUpdateWork(work).then(
+            _ => {
+                close()
+                updateWork()
+            })
     }
 
     return <>
