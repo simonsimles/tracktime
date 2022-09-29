@@ -49,9 +49,11 @@ const SummaryRow = ({ workWeek, projects }: SummaryRowProps) => {
             .reduce((prev, curr) => curr.plus(prev), new Time(0, 0))
     }
 
+    const days = new Set(workWeek?.work.map(w => w.date)).size
+
     const totalWork = sumWork(() => true)
 
-    return <Card className={totalWork.hours >= 40 ? "text-bg-success" : "text-bg-warning"}>
+    return <Card className={totalWork.hours >= 8 * days ? "text-bg-success" : "text-bg-warning"}>
         <Card.Title>Summary</Card.Title>
         <Row>
             <Col>Chargeable:</Col>

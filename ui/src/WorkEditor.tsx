@@ -57,10 +57,10 @@ export const WorkEditor = ({ work, setWork, projectMap }: WorkEditorProps) => {
         <Row>
             <Form.Group>
                 <Form.Label>Project</Form.Label>
-                <Form.Select onChange={e => setProject(e.target.selectedOptions[0].id)}>
+                <Form.Select onChange={e => setProject(e.target.selectedOptions[0].id)} value={work.project}>
                     {work.project === "" ? <option>Select a project</option> : <></>}
                     {projects.map(t =>
-                        <option key={t[0]} id={t[0]} value={work.project}>{t[1]}</option>)}
+                        <option key={t[0]} id={t[0]} value={t[0]}>{t[1]}</option>)}
                 </Form.Select>
             </Form.Group>
         </Row>

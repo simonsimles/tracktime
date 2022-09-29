@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Card, Col, Container, Row } from "react-bootstrap"
 import { BsArrowClockwise, BsCupFill, BsStopwatch, BsStopwatchFill } from 'react-icons/bs'
-import { AbsolutePeriod, Api, IntervalPeriod, Project, Work } from "./Api"
+import { AbsolutePeriod, Api, IntervalPeriod, Project, Time, Work } from "./Api"
 import WeekPicker, { Week } from "./WeekPicker"
 import { ChangeWork, NewWork } from './WorkEditor'
 
@@ -14,35 +14,54 @@ function compareWork(w1: Work, w2: Work): number {
     } else { return 1 }
 }
 
-const PeriodElement = ({period}: {period?: AbsolutePeriod | IntervalPeriod}) => {
-        if (period === undefined) { return <></> }
-        else if (period instanceof AbsolutePeriod) {
-            return <Card className='mt-2'>
-                <Card.Footer>
-                    <Row><Col>&sum;</Col><Col>{period.totalTime().toString()}</Col></Row>
-                </Card.Footer>
-            </Card>
-        }
-        else if (period instanceof IntervalPeriod) {
-            return <>
-                <small>
-                    <Card className='mt-2'>
-                        <Card.Body className="no-pad">
-                            <Row><Col><BsStopwatch /></Col><Col>{period.start.toString()}</Col></Row>
-                            <Row><Col><BsStopwatchFill /></Col><Col>{period.end?.toString() ?? <span>&mdash;</span>}</Col></Row>
-                            <Row><Col><BsCupFill /></Col><Col>{period.pause?.toString() ?? <span>&mdash;</span>}</Col></Row>
-                        </Card.Body>
-                        <Card.Footer>
-                            <Row><Col>&sum;</Col><Col>{period.totalTime().toString()}</Col></Row>
-                        </Card.Footer>
-                    </Card>
-                </small>
-            </>
-        }
-        else {
-            console.error("Could not create string: ", period)
-            return <></>
-        }
+const UpdatedIntervalTime = ({ period }: { period: IntervalPeriod }) => {
+    const getCurrentIntervalPeriod = () => new IntervalPeriod(period.start,
+        new Time().now(),
+        period.pause)
+
+    const [updatedPeriod, setUpdatedPeriod] = useState(getCurrentIntervalPeriod())
+
+    useEffect(() => {
+        const interval = setInterval(() => setUpdatedPeriod(getCurrentIntervalPeriod()), 60 * 1000)
+        return () => clearInterval(interval)
+    })
+    return <>{updatedPeriod.totalTime().toString()}</>
+}
+
+const PeriodElement = ({ period }: { period?: AbsolutePeriod | IntervalPeriod }) => {
+
+    if (period === undefined) { return <></> }
+    else if (period instanceof AbsolutePeriod) {
+        return <Card className='mt-2'>
+            <Card.Footer>
+                <Row><Col>&sum;</Col><Col>{period.totalTime().toString()}</Col></Row>
+            </Card.Footer>
+        </Card>
+    }
+    else if (period instanceof IntervalPeriod) {
+        return <>
+            <small>
+                <Card className='mt-2'>
+                    <Card.Body className="no-pad">
+                        <Row><Col><BsStopwatch /></Col><Col>{period.start.toString()}</Col></Row>
+                        <Row><Col><BsStopwatchFill /></Col><Col>{period.end?.toString() ?? <span>&mdash;</span>}</Col></Row>
+                        <Row><Col><BsCupFill /></Col><Col>{period.pause?.toString() ?? <span>&mdash;</span>}</Col></Row>
+                    </Card.Body>
+                    <Card.Footer>
+                        <Row><Col>&sum;</Col><Col>{
+                            period.end !== undefined ?
+                                period.totalTime().toString() :
+                                <UpdatedIntervalTime period={period} />
+                        }</Col></Row>
+                    </Card.Footer>
+                </Card>
+            </small>
+        </>
+    }
+    else {
+        console.error("Could not create string: ", period)
+        return <></>
+    }
 }
 
 interface WorkRowProps {
@@ -74,7 +93,7 @@ const WorkRow = ({ work, projectMap, updateWork }: WorkRowProps) => {
                 </style>
                 <Card.Title>{work.date}</Card.Title>
                 <Card.Subtitle>{getProjectById(work.project)}</Card.Subtitle>
-                <PeriodElement period={work.period}/>
+                <PeriodElement period={work.period} />
                 <div hidden={work.comment === undefined}>
                     <pre className='mb-0 pb-0'>{work.comment ?? ""}</pre>
                 </div>

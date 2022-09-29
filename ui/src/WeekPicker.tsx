@@ -11,7 +11,13 @@ export class Week {
             this.year = Number(matches[1])
             this.week = Number(matches[2])
         } else {
-            const d = new Date()
+            const matches = weekString.match("(\\d{4})-(\\d{2})-(\\d{2})")
+            let d: Date
+            if (matches) {
+                d = new Date(Number(matches[1]), Number(matches[2]) - 1, Number(matches[3]))
+            } else {
+                d = new Date()
+            }
             this.year = d.getFullYear()
             this.week = getWeekFromDate(d)
         }
