@@ -101,7 +101,7 @@ const Overview = ({ week, setWeek }: OverviewProps) => {
     }, [week])
 
     useEffect(() => {
-        Api.getProjects().then((p) => setProjects(p))
+        Api.getProjects().then((p) => setProjects(p.filter(project => project.isActive)))
     }, [])
 
     function saveComment(week: Week, comment?: string) {
