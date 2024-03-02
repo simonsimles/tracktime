@@ -13,9 +13,9 @@ const SumOfTimePerProject = ({ projectId, workWeeks, month }: SumOfTimePerProjec
     return <td key={`${projectId}`}>
         {
             workWeeks?.flatMap(w => w.work).filter(
-                w => new Date(w.date).getMonth() == month.getFirstDay().getMonth()
+                w => new Date(w.date).getMonth() === month.getFirstDay().getMonth()
             ).filter(
-                w => w.project == projectId
+                w => w.project === projectId
             ).map(
                 w => w.period.totalTime()
             ).reduce((a, b) => a.plus(b), new Time(0, 0)).toString()
@@ -41,7 +41,7 @@ const WeekRow = ({ workWeek, projects, activeWeeks, toggleActiveWeek, month }: W
         </tr>
         {Array.from(new Set(
             workWeek.work.map(w => w.date).filter(
-                d => new Date(d).getMonth() == month.getFirstDay().getMonth()
+                d => new Date(d).getMonth() === month.getFirstDay().getMonth()
             )
         )).sort().map(d => {
             return <tr hidden={!activeWeeks.includes(workWeek.week)} key={d} className="table-warning">
@@ -49,7 +49,7 @@ const WeekRow = ({ workWeek, projects, activeWeeks, toggleActiveWeek, month }: W
                 {
                     projects?.map(p =>
                         [p.projectId, workWeek.work.filter(
-                            w => w.project == p.projectId && w.date == d
+                            w => w.project === p.projectId && w.date === d
                         ).map(w => w.period.totalTime())
                             .reduce((a, b) => a.plus(b), new Time(0, 0)).toString()]
                     ).map(t => <td key={t[0]}>{t[1]}</td>)
@@ -73,7 +73,7 @@ const MonthTable = ({ workWeeks, projects, month }: MonthTableProps) => {
 
     const toggleActiveWeek = (week: string) => {
         if (activeWeeks.includes(week)) {
-            setActiveWeeks(activeWeeks.filter(w => w != week))
+            setActiveWeeks(activeWeeks.filter(w => w !== week))
         } else {
             setActiveWeeks([...activeWeeks, week])
         }
