@@ -29,7 +29,7 @@ const WeekTable = ({ workWeek, projects }: WeekTableProps) => {
     const [days, setDays] = useState<Date[]>([])
 
     useEffect(() => {
-        setProjectMap(projects.map(p => [p.projectId, p.name]))
+        setProjectMap(projects.sort((p, p2) => p.name.localeCompare(p2.name)).map(p => [p.projectId, p.name]))
     }, [projects])
 
     useEffect(() => {
@@ -41,7 +41,7 @@ const WeekTable = ({ workWeek, projects }: WeekTableProps) => {
 
     function getProjectNameById(id: string): string {
         const filteredProject = projectMap.filter(p => p[0] === id)
-        if (filteredProject.length > 0){
+        if (filteredProject.length > 0) {
             return filteredProject[0][1]
         }
         return ""

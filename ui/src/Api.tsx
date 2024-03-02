@@ -126,7 +126,7 @@ function useActualObjectsInWorkJson(work: Work) {
 
 class ApiWrapper {
     async getProjects(): Promise<Project[]> {
-        return fetch("/api/projects").then(
+        return fetch("api/projects").then(
             (r) => r.json(),
             (err) => console.error(err)
         )
@@ -144,7 +144,7 @@ class ApiWrapper {
     }
 
     async deleteProject(projectId: string): Promise<Project> {
-        return fetch(`/api/projects/${projectId}`, {
+        return fetch(`api/projects/${projectId}`, {
             method: "DELETE"
         }).then(
             (r) => r.json(),
@@ -153,7 +153,7 @@ class ApiWrapper {
     }
 
     async getWorkWeek(week: Week): Promise<WorkWeek> {
-        return fetch(`/api/work/${week.year}/${week.week}`).then(
+        return fetch(`api/work/${week.year}/${week.week}`).then(
             (r) => {
                 switch (r.status) {
                     case 200: return r.json().then(

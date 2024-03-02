@@ -5,21 +5,32 @@ import { DAY_IN_SECONDS, getWeekFromDate } from './Date';
 export class Week {
     year: number
     week: number
-    constructor(weekString: string) {
-        const matches = weekString.match("(\\d{4})-W(\\d{2})")
-        if (matches) {
-            this.year = Number(matches[1])
-            this.week = Number(matches[2])
-        } else {
-            const matches = weekString.match("(\\d{4})-(\\d{2})-(\\d{2})")
-            let d: Date
+
+    constructor(weekString: string);
+    constructor(year: number, week: number);
+    constructor(value1: string | number, value2?: number) {
+        if (typeof value1 == "string") {
+            const weekString = value1
+            const matches = weekString.match("(\\d{4})-W(\\d{2})")
             if (matches) {
-                d = new Date(Number(matches[1]), Number(matches[2]) - 1, Number(matches[3]))
+                this.year = Number(matches[1])
+                this.week = Number(matches[2])
             } else {
-                d = new Date()
+                const matches = weekString.match("(\\d{4})-(\\d{2})-(\\d{2})")
+                let d: Date
+                if (matches) {
+                    d = new Date(Number(matches[1]), Number(matches[2]) - 1, Number(matches[3]))
+                } else {
+                    d = new Date()
+                }
+                this.year = d.getFullYear()
+                this.week = getWeekFromDate(d)
             }
-            this.year = d.getFullYear()
-            this.week = getWeekFromDate(d)
+        } else if (typeof value1 == "number" && typeof value2 == "number") {
+            this.year = value1
+            this.week = value2
+        } else {
+            throw new Error("Invalid arguments to Week")
         }
     }
 
