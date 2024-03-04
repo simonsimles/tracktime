@@ -30,8 +30,8 @@ const MonthView = ({ month, setMonth }: MonthViewProps) => {
 
             try {
                 const results = await Promise.all(promises)
-                results.sort((u,v) => u.week.localeCompare(v.week))
-                setWorkWeeks(results)
+                const sortedAndFilteredResults = results.filter(Boolean).sort((u,v) => u.week.localeCompare(v.week))
+                setWorkWeeks(sortedAndFilteredResults)
             } catch (error) {
                 console.error(error)
             }
