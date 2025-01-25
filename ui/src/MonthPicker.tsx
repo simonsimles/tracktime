@@ -37,8 +37,8 @@ export class Month {
     getWeeks(): Array<Week> {
         const firstDay = this.getFirstDay()
         const lastDay = this.getLastDay()
-        const firstWeek = getWeekFromDate(firstDay)
         const lastWeek = getWeekFromDate(lastDay)
+        const firstWeek = getWeekFromDate(firstDay) > lastWeek ? 1 : getWeekFromDate(firstDay)
         return Array.from({ length: lastWeek - firstWeek + 1 }, (_, i) => {
             return new Week(firstDay.getFullYear(), firstWeek + i)
         })

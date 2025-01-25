@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
     inThisBuild(
       List(
         organization := "de.simles",
-        scalaVersion := "2.13.4"
+        scalaVersion := "2.13.15"
       )
     ),
     buildUi := {
