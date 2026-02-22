@@ -14,7 +14,8 @@ import de.simles.tracktime.registry.WorkRegistry
 object TracktimeApp {
   private def startHttpServer(routes: Route)(implicit system: ActorSystem[_]): Unit = {
     import system.executionContext
-    val futureBinding = Http().newServerAt("127.0.0.1", 9000).bind(routes)
+    val bindHost = sys.env.getOrElse("TRACKTIME_HOST", "127.0.0.1")
+    val futureBinding = Http().newServerAt(bindHost, 9000).bind(routes)
     futureBinding.onComplete {
       case Success(binding) =>
         val address = binding.localAddress
