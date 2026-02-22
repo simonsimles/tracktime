@@ -32,8 +32,10 @@ object TracktimeApp {
       context.watch(projectRegistryActor)
       val workRegistryActor = context.spawn(WorkRegistry(), "WorkRegistryActor")
       context.watch(workRegistryActor)
+      val authServiceActor = context.spawn(AuthService(), "AuthServiceActor")
+      context.watch(authServiceActor)
 
-      val routes = new Routes(projectRegistryActor, workRegistryActor)(context.system)
+      val routes = new Routes(projectRegistryActor, workRegistryActor, authServiceActor)(context.system)
       startHttpServer(routes.apiRoutes ~ routes.assets)(context.system)
 
       Behaviors.empty

@@ -11,6 +11,8 @@ import akka.http.scaladsl.model.MediaType
 import akka.http.scaladsl.model.MediaTypes
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directive
+import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Route._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
@@ -28,30 +30,88 @@ import scala.concurrent.Future
 
 class Routes(
     projectRegistry: ActorRef[ProjectRegistry.ProjectCommand],
-    workRegistry: ActorRef[WorkRegistry.WorkCommand]
+    workRegistry: ActorRef[WorkRegistry.WorkCommand],
+    authService: ActorRef[AuthCommand]
 )(implicit val system: ActorSystem[_]) {
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
   import JsonFormats._
 
-  private implicit val timeout =
+  private implicit val timeout: Timeout =
     Timeout.create(system.settings.config.getDuration("my-app.routes.ask-timeout"))
+
+  /**
+   * Authentication directive that validates JWT tokens.
+   * Extracts the token from Authorization header and validates it.
+   * Returns 401 if token is missing or invalid.
+   */
+  private def authenticate: Directive0 = {
+    optionalHeaderValueByName("Authorization").flatMap {
+      case Some(authHeader) =>
+        Auth.extractToken(authHeader) match {
+          case Some(token) =>
+            Auth.validateToken(token, ConfigManager.getSecretKey()) match {
+              case Some(_) => pass  // Token is valid, continue
+              case None =>
+                complete(
+                  (StatusCodes.Unauthorized,
+                    ErrorResponse("Invalid or expired token"))
+                )
+            }
+          case None =>
+            complete(
+              (StatusCodes.Unauthorized,
+                ErrorResponse("Missing or invalid Authorization header"))
+            )
+        }
+      case None =>
+        complete(
+          (StatusCodes.Unauthorized,
+            ErrorResponse("Missing Authorization header"))
+        )
+    }
+  }
 
   val apiRoutes: Route =
     pathPrefix("api") {
       concat(
-        pathPrefix("projects")(projectRoute),
-        pathPrefix("work")(workRoute)
+        pathPrefix("auth")(authRoute),
+        authenticate {
+          concat(
+            pathPrefix("projects")(projectRoute),
+            pathPrefix("work")(workRoute)
+          )
+        }
       )
     }
 
-  def assets: Route = getFromResourceDirectory("ui") ~ pathPrefix("") {
+  def assets: Route = getFromResourceDirectory("") ~ pathPrefix("") {
     get {
       getFromResource(
-        "ui/index.html",
+        "index.html",
         ContentType(MediaType.textWithFixedCharset("html", HttpCharsets.`UTF-8`))
       )
     }
   }
+
+  /**
+   * Authentication routes (unprotected)
+   */
+  val authRoute: Route = concat(
+    path("login") {
+      post {
+        entity(as[LoginRequest]) { loginRequest =>
+          onSuccess(authService.ask(Login(loginRequest.password, _))) { response =>
+            response match {
+              case LoginSuccess(token, expiresIn) =>
+                complete((StatusCodes.OK, LoginResponse(token, expiresIn)))
+              case LoginFailure(error) =>
+                complete((StatusCodes.Unauthorized, ErrorResponse(error)))
+            }
+          }
+        }
+      }
+    }
+  )
 
   val projectRoute: Route = concat(
     get {

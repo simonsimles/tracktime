@@ -1,4 +1,5 @@
 import { Week } from "./WeekPicker"
+import { authService } from "./AuthService"
 
 export interface Project {
     projectId: string
@@ -125,8 +126,18 @@ function useActualObjectsInWorkJson(work: Work) {
 }
 
 class ApiWrapper {
+    private getAuthHeaders(): HeadersInit {
+        const token = authService.getToken()
+        return {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+    }
+
     async getProjects(): Promise<Project[]> {
-        return fetch("api/projects").then(
+        return fetch("api/projects", {
+            headers: this.getAuthHeaders()
+        }).then(
             (r) => r.json(),
             (err) => console.error(err)
         )
@@ -135,7 +146,7 @@ class ApiWrapper {
     async addOrUpdateProject(project: Project): Promise<Project> {
         return fetch("/api/projects", {
             method: "POST",
-            headers: { 'Content-Type': "application/json" },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(project)
         }).then(
             (r) => r.json(),
@@ -145,7 +156,8 @@ class ApiWrapper {
 
     async deleteProject(projectId: string): Promise<Project> {
         return fetch(`api/projects/${projectId}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: this.getAuthHeaders()
         }).then(
             (r) => r.json(),
             (err) => console.error(err)
@@ -153,7 +165,9 @@ class ApiWrapper {
     }
 
     async getWorkWeek(week: Week): Promise<WorkWeek> {
-        return fetch(`api/work/${week.year}/${week.week}`).then(
+        return fetch(`api/work/${week.year}/${week.week}`, {
+            headers: this.getAuthHeaders()
+        }).then(
             (r) => {
                 switch (r.status) {
                     case 200: return r.json().then(
@@ -172,7 +186,9 @@ class ApiWrapper {
     }
 
     async getWorkForWeek(week: Week): Promise<Work[]> {
-        return fetch(`api/work/${week.year}/${week.week}?onlyWork=yes`).then(
+        return fetch(`api/work/${week.year}/${week.week}?onlyWork=yes`, {
+            headers: this.getAuthHeaders()
+        }).then(
             (r) => r.json().then(parsed => {
                 parsed.forEach(useActualObjectsInWorkJson)
                 return parsed
@@ -184,7 +200,7 @@ class ApiWrapper {
     async updateWorkWeekComment(week: Week, comment?: string): Promise<WorkWeek> {
         return fetch(`/api/work/${week.year}/${week.week}`, {
             method: "POST",
-            headers: { 'Content-Type': "application/json" },
+            headers: this.getAuthHeaders(),
             body: comment
         }).then(
             (r) => r.json(),
@@ -202,7 +218,7 @@ class ApiWrapper {
     async addOrUpdateWork(work: Work): Promise<Work> {
         return fetch(`/api/work`, {
             method: "POST",
-            headers: { 'Content-Type': "application/json" },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(work, this.timeReplace)
         }).then(
             (r) => r.json(),

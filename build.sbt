@@ -11,9 +11,16 @@ lazy val buildUi = taskKey[Unit]("Build UI")
 
 lazy val root = (project in file("."))
   .settings(
-    Compile / unmanagedResourceDirectories += baseDirectory.value / "ui" / "build",
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "ui" / "build" / "ui",
     assembly / mainClass := Some("de.simles.tracktime.TracktimeApp"),
     assembly / assemblyJarName := "tracktime.jar",
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.discard
+      case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+      case x =>
+        val oldStrategy = (assembly / assemblyMergeStrategy).value
+        oldStrategy(x)
+    },
     inThisBuild(
       List(
         organization := "de.simles",
@@ -22,7 +29,10 @@ lazy val root = (project in file("."))
     ),
     buildUi := {
         import scala.sys.process._
-        val p = Process(Seq("powershell", "npm", "run", "build"), file("ui")) !
+        val uiPath = baseDirectory.value / "ui" / "build" / "ui" / "index.html"
+        if (!uiPath.exists()) {
+            val p = Process(Seq("powershell", "npm", "run", "build"), file("ui")) !
+        }
     },
     Compile / copyResources := {
         val build = buildUi.value
@@ -35,6 +45,8 @@ lazy val root = (project in file("."))
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
       "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "com.auth0" % "java-jwt" % "4.4.0",
+      "at.favre.lib" % "bcrypt" % "0.10.2",
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
       "org.scalatest" %% "scalatest" % "3.1.4" % Test

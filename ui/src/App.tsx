@@ -1,6 +1,6 @@
 import './App.css';
 import Menu from './Menu';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Footer from './Footer';
 import Overview from './Overview';
 import { Week } from './WeekPicker';
@@ -9,12 +9,20 @@ import Entries from './Entries';
 import MonthView from './MonthView';
 import { Month } from './MonthPicker';
 import { getWeekFromDate } from './Date';
+import { LoginPage } from './components/LoginPage';
+import { authService } from './AuthService';
 
 const Pages = ["Overview", "Entries", "Projects", "MonthView"]
 
 function App() {
+    const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
     const [activePage, setActivePage] = useState(Pages[0])
     const [week, setWeek] = useState(new Week(""));
+
+    useEffect(() => {
+        // Check authentication on component mount
+        setIsAuthenticated(authService.isAuthenticated());
+    }, [])
 
     function getPage() {
         switch (activePage) {
@@ -29,6 +37,10 @@ function App() {
             default:
                 return "Illegal state"
         }
+    }
+
+    if (!isAuthenticated) {
+        return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
     }
 
     return (

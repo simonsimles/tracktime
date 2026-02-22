@@ -39,8 +39,8 @@ object JsonFormats extends DefaultJsonProtocol {
     }
   }
 
-  implicit val intervalPeriodFormat = jsonFormat3(IntervalPeriod)
-  implicit val absolutePeriodFormat = jsonFormat1(AbsolutePeriod)
+  implicit val intervalPeriodFormat: RootJsonFormat[IntervalPeriod] = jsonFormat3(IntervalPeriod)
+  implicit val absolutePeriodFormat: RootJsonFormat[AbsolutePeriod] = jsonFormat1(AbsolutePeriod)
 
   implicit object PeriodFormat extends RootJsonFormat[Period] {
     def read(json: JsValue): Period = json match {
@@ -57,9 +57,18 @@ object JsonFormats extends DefaultJsonProtocol {
     }
   }
 
-  implicit val workFormat = jsonFormat5(Work)
-  implicit val jobNumberFormat = jsonFormat3(JobNumber)
-  implicit val projectFormat = jsonFormat5(Project)
+  implicit val workFormat: RootJsonFormat[Work] = jsonFormat5(Work)
+  implicit val jobNumberFormat: RootJsonFormat[JobNumber] = jsonFormat3(JobNumber)
+  implicit val projectFormat: RootJsonFormat[Project] = jsonFormat5(Project)
 
-  implicit val workWeekFormat = jsonFormat3(WorkWeek)
+  implicit val workWeekFormat: RootJsonFormat[WorkWeek] = jsonFormat3(WorkWeek)
+
+  // Authentication formats
+  case class LoginRequest(password: String)
+  case class LoginResponse(token: String, expiresIn: Int)
+  case class ErrorResponse(error: String)
+
+  implicit val loginRequestFormat: RootJsonFormat[LoginRequest] = jsonFormat1(LoginRequest)
+  implicit val loginResponseFormat: RootJsonFormat[LoginResponse] = jsonFormat2(LoginResponse)
+  implicit val errorResponseFormat: RootJsonFormat[ErrorResponse] = jsonFormat1(ErrorResponse)
 }
