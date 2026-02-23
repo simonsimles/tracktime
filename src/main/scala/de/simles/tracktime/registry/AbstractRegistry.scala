@@ -23,7 +23,8 @@ abstract class AbstractRegistry {
       .iterator()
       .asScala
       .toSeq
-      .findLast(_.toString().matches(""".+\d{15}\.json$"""))
+      .filter(_.getFileName.toString.matches("""\d{15}\.json$"""))
+      .maxByOption(_.getFileName.toString)
   }
 
   def getNewFile(folder: String): Path =
