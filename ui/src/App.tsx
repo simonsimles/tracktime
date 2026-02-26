@@ -22,6 +22,32 @@ function App() {
     useEffect(() => {
         // Check authentication on component mount
         setIsAuthenticated(authService.isAuthenticated());
+        
+        // Start periodic token check when page is visible
+        authService.startPeriodicCheck();
+
+        // Handle page visibility changes
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                // User returned to the app - check if token is still valid
+                if (!authService.isTokenValid()) {
+                    setIsAuthenticated(false);
+                }
+                // Start periodic check when page becomes visible
+                authService.startPeriodicCheck();
+            } else {
+                // User switched to another tab/window - stop periodic check
+                authService.stopPeriodicCheck();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Cleanup function
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            authService.stopPeriodicCheck();
+        };
     }, [])
 
     function getPage() {
@@ -45,7 +71,15 @@ function App() {
 
     return (
         <div className="App">
-            <Menu changeMenu={s => setActivePage(s)} entries={Pages} isSelected={activePage} />
+            <Menu 
+                changeMenu={s => setActivePage(s)} 
+                entries={Pages} 
+                isSelected={activePage}
+                onLogout={() => {
+                    authService.clearToken();
+                    setIsAuthenticated(false);
+                }}
+            />
             {getPage()}
             <Footer />
         </div>

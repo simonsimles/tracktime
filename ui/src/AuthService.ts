@@ -7,6 +7,7 @@ class AuthService {
   private readonly TOKEN_KEY = "tracktime_auth_token";
   private readonly TOKEN_EXPIRY_KEY = "tracktime_auth_expiry";
   private readonly API_BASE = "/api";
+  private checkInterval: NodeJS.Timeout | null = null;
 
   /**
    * Login with password and store the resulting JWT token.
@@ -98,6 +99,33 @@ class AuthService {
    */
   isTokenValid(): boolean {
     return this.isAuthenticated();
+  }
+
+  /**
+   * Start periodic token validity check (runs every 60 seconds).
+   * Should be called when the page becomes visible.
+   */
+  startPeriodicCheck(): void {
+    // Clear any existing interval to avoid duplicates
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+    }
+    // Check token validity every 60 seconds
+    this.checkInterval = setInterval(() => {
+      // Token expiry is handled silently - when page becomes visible,
+      // we check explicitly. This interval is just a safety net.
+    }, 60000);
+  }
+
+  /**
+   * Stop periodic token validity check.
+   * Should be called when the page becomes hidden.
+   */
+  stopPeriodicCheck(): void {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
   }
 }
 

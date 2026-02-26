@@ -134,7 +134,17 @@ class ApiWrapper {
         }
     }
 
+    private checkTokenBeforeRequest(): boolean {
+        if (!authService.isTokenValid()) {
+            console.warn('Token has expired, request blocked');
+            authService.clearToken();
+            return false;
+        }
+        return true;
+    }
+
     async getProjects(): Promise<Project[]> {
+        if (!this.checkTokenBeforeRequest()) return [];
         return fetch("api/projects", {
             headers: this.getAuthHeaders()
         }).then(
@@ -144,6 +154,7 @@ class ApiWrapper {
     }
 
     async addOrUpdateProject(project: Project): Promise<Project> {
+        if (!this.checkTokenBeforeRequest()) return {} as Project;
         return fetch("/api/projects", {
             method: "POST",
             headers: this.getAuthHeaders(),
@@ -155,6 +166,7 @@ class ApiWrapper {
     }
 
     async deleteProject(projectId: string): Promise<Project> {
+        if (!this.checkTokenBeforeRequest()) return {} as Project;
         return fetch(`api/projects/${projectId}`, {
             method: "DELETE",
             headers: this.getAuthHeaders()
@@ -165,6 +177,7 @@ class ApiWrapper {
     }
 
     async getWorkWeek(week: Week): Promise<WorkWeek> {
+        if (!this.checkTokenBeforeRequest()) return {} as WorkWeek;
         return fetch(`api/work/${week.year}/${week.week}`, {
             headers: this.getAuthHeaders()
         }).then(
@@ -186,6 +199,7 @@ class ApiWrapper {
     }
 
     async getWorkForWeek(week: Week): Promise<Work[]> {
+        if (!this.checkTokenBeforeRequest()) return [];
         return fetch(`api/work/${week.year}/${week.week}?onlyWork=yes`, {
             headers: this.getAuthHeaders()
         }).then(
@@ -198,6 +212,7 @@ class ApiWrapper {
     }
 
     async updateWorkWeekComment(week: Week, comment?: string): Promise<WorkWeek> {
+        if (!this.checkTokenBeforeRequest()) return {} as WorkWeek;
         return fetch(`/api/work/${week.year}/${week.week}`, {
             method: "POST",
             headers: this.getAuthHeaders(),
@@ -216,6 +231,7 @@ class ApiWrapper {
     }
 
     async addOrUpdateWork(work: Work): Promise<Work> {
+        if (!this.checkTokenBeforeRequest()) return {} as Work;
         return fetch(`/api/work`, {
             method: "POST",
             headers: this.getAuthHeaders(),

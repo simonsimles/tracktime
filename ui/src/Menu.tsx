@@ -1,12 +1,13 @@
-import { Navbar, Container, Nav } from 'react-bootstrap';
+import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 
 interface MenuProps {
     changeMenu: (selected: string) => void
     entries: string[]
     isSelected: string
+    onLogout: () => void
 }
 
-const Menu = ({ changeMenu, entries, isSelected }: MenuProps) => {
+const Menu = ({ changeMenu, entries, isSelected, onLogout }: MenuProps) => {
     return <Navbar bg='dark' variant='dark' fixed="top" sticky='top'>
         <Container fluid>
             <Navbar.Brand href='#home'>Tracktime</Navbar.Brand>
@@ -20,6 +21,15 @@ const Menu = ({ changeMenu, entries, isSelected }: MenuProps) => {
                             active={n === isSelected}>
                             {n}</Nav.Link>)
                     }
+                </Nav>
+                <Nav>
+                    <Button 
+                        variant="outline-light" 
+                        size="sm"
+                        onClick={onLogout}
+                    >
+                        Logout
+                    </Button>
                 </Nav>
             </Navbar.Collapse>
         </Container>
